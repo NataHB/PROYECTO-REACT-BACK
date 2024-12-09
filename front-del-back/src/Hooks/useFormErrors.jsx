@@ -22,6 +22,34 @@ const useFormErrors = () => {
             newErrors.name = errors.name.errors.map(error => error.message)
         }
 
+        if(errors.title) {
+            newErrors.title = errors.title.errors.map(error => error.message)
+        }
+
+        if(errors.description) {
+            newErrors.description = errors.description.errors.map(error => error.message)
+        }
+
+        if(errors.price) {
+            newErrors.price = errors.price.errors.map(error => error.message)
+        }
+
+        if(errors.stock) {
+            newErrors.stock = errors.stock.errors.map(error => error.message)
+        }
+
+        if(errors.category) {
+            newErrors.category = errors.category.errors.map(error => error.message)
+        }
+
+        if(errors.seller_id) {
+            newErrors.seller_id = errors.seller_id.errors.map(error => error.message)
+        }
+
+        if(errors.message) {
+            newErrors.message = errors.message
+        }
+
         setErrors(newErrors)
     }
 

@@ -1,70 +1,80 @@
-import React from 'react'
-import useForm  from '../Hooks/UseForm'
+import React, { useState } from 'react';
+import useForm from '../Hooks/UseForm';
+import './Form.css';
 
-const Form = ({children, action, form_fields, inital_state_form}) => {
-    //children hace referencia a el contenido encerrado como hijo de nuestro componente
-    const { formState, handleChange } = useForm(inital_state_form)
+const Form = ({ initial_form_state, action, form_fields, errorState, buttonText }) => {
+  const { formState, handleChange } = useForm(initial_form_state);
+  
+  // Estado para manejar la previsualización de la imagen
+  const [imagePreview, setImagePreview] = useState(null);
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        action(formState)
+  // Manejo del cambio para los archivos (imágenes)
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Convertir la imagen a Base64 (por ejemplo) para enviarla
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // Guardamos el archivo como Base64 en el estado
+        handleChange({
+          target: {
+            name: e.target.name,
+            value: reader.result // Base64 de la imagen
+          }
+        });
+        setImagePreview(reader.result); // Establecer la previsualización de la imagen
+      };
+      reader.readAsDataURL(file);
     }
+  };
 
-    return (
-        <form onSubmit={handleSubmit}>
-            <FieldList form_fields={form_fields} handleChange={handleChange} form_state={formState}/>
-            {children}
-        </form>
-    )
-}
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    action(formState);
+  };
 
-const FieldList = ({form_fields, handleChange, form_state} ) => {
-    return (
-        form_fields.map((field, index) => {
-            return (
-                <Field 
-                key={index + field.field_data_props.name} 
-                field={field} 
-                handleChange={handleChange} 
-                state_value={form_state[field.field_data_props.name]}
+  return (
+    <form onSubmit={handleSubmit}>
+      {form_fields.map((field, index) => {
+        const { label, field: inputField, errors } = field;
+
+        return (
+          <div key={index} className="form-field">
+            <label {...label.props}>{label.text}</label>
+            {/* Verificamos si el campo es de tipo "file" */}
+            {inputField.props.type === 'file' ? (
+              <>
+                <input
+                  {...inputField.props}
+                  onChange={handleFileChange}
+                  // El valor no se establece para el campo de archivo
+                  // Solo se manejará cuando el archivo sea seleccionado
                 />
-            )
-        })
-    )
-}
+                {/* Mostrar la previsualización de la imagen si existe */}
+                {imagePreview && <img src={imagePreview} alt="Preview" style={{ width: '100px', marginTop: '10px' }} />}
+              </>
+            ) : (
+              <input
+                {...inputField.props}
+                value={formState[inputField.props.name] || ''}
+                onChange={handleChange}
+              />
+            )}
+            {errorState[errors] && (
+              <ul>
+                {errorState[errors].map((error, i) => (
+                  <li key={i} style={{ color: '#471248' }}>
+                    {error}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+      <button type="submit">{buttonText}</button>
+    </form>
+  );
+};
 
-/* 
- {
-            label_text: 'Ingresa nueva contraseña:',
-            field_component: 'INPUT',
-            field_container_props: {
-                className: 'row_field'
-            },
-            field_data_props: {
-                name: 'password',
-                id: 'password',
-                placeholder:'',
-                type: 'password'
-            }
-        }
-*/
-
-const Field = ({field, handleChange, state_value}) => {
-    return (
-        <div {...field.field_container_props}>
-            {field.label_text && <label>{field.label_text}</label>}
-            <>
-                {
-                    field.field_component === 'INPUT'
-                    ? <input  onChange={handleChange} value={state_value} {...field.field_data_props}/>
-                    : <textarea></textarea>
-                }
-            </>
-        </div>
-    )
-}
-
-
-
-
-export default Form
+export default Form;
